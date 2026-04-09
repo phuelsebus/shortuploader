@@ -1,0 +1,16 @@
+{
+  "name": "shorts-uploader",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm --prefix frontend install && npm --prefix backend install",
+    "dev": "concurrently -n frontend,backend -c cyan,green \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
+    "build": "npm --prefix frontend run build && npm --prefix backend run build",
+    "test": "npm --prefix frontend run test && npm --prefix backend run test",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "concurrently": "^9.0.0"
+  }
+}

@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - '3001:3001'
+    env_file: ./backend/.env
+    volumes:
+      - upload_tmp:/tmp/shorts-uploader
+
+  frontend:
+    build: ./frontend
+    ports:
+      - '80:80'
+    env_file: ./frontend/.env
+    depends_on:
+      - backend
+
+volumes:
+  upload_tmp:

@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+frontend/dist/
+backend/dist/
+
+# Environment variables
+.env
+!*.env.example
+
+# Logs
+*.log
+logs/
+
+# Temp upload storage
+/tmp/
+upload_tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Test coverage
+coverage/
