@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { VideoDropzone } from '../components/VideoDropzone';
-import { PlatformSelector } from '../components/PlatformSelector';
-import { UploadProgress } from '../components/UploadProgress';
-import { useUpload } from '../hooks/useUpload';
-import { useUploadStatus } from '../hooks/useUploadStatus';
-import { Platform } from '../types';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { VideoDropzone } from "../components/VideoDropzone";
+import { PlatformSelector } from "../components/PlatformSelector";
+import { UploadProgress } from "../components/UploadProgress";
+import { useUpload } from "../hooks/useUpload";
+import { useUploadStatus } from "../hooks/useUploadStatus";
+import { Platform } from "../types";
 
 const schema = z.object({
-  title: z.string().min(1, 'Title is required').max(100, 'Max 100 characters'),
-  description: z.string().max(2200, 'Max 2200 characters').optional(),
+  title: z.string().min(1, "Title is required").max(100, "Max 100 characters"),
+  description: z.string().max(2200, "Max 2200 characters").optional(),
   tags: z.string().optional(),
 });
 
@@ -35,14 +35,14 @@ export function UploadPage() {
     if (!videoFile || platforms.length === 0) return;
     const tags = values.tags
       ? values.tags
-          .split(',')
+          .split(",")
           .map((t) => t.trim())
           .filter(Boolean)
       : [];
     const result = await upload.mutateAsync({
       video: videoFile,
       title: values.title,
-      description: values.description ?? '',
+      description: values.description ?? "",
       tags,
       platforms,
     });
@@ -70,19 +70,23 @@ export function UploadPage() {
                 Title <span className="text-red-500">*</span>
               </label>
               <input
-                {...register('title')}
+                {...register("title")}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
                 placeholder="My awesome short"
               />
               {errors.title && (
-                <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.title.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
               <textarea
-                {...register('description')}
+                {...register("description")}
                 rows={3}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
                 placeholder="Tell viewers what this is about…"
@@ -90,9 +94,11 @@ export function UploadPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags
+              </label>
               <input
-                {...register('tags')}
+                {...register("tags")}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
                 placeholder="shorts, viral, funny (comma-separated)"
               />
@@ -114,7 +120,7 @@ export function UploadPage() {
             disabled={!videoFile || platforms.length === 0 || isPublishing}
             className="w-full rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
           >
-            {isPublishing ? 'Publishing…' : 'Publish'}
+            {isPublishing ? "Publishing…" : "Publish"}
           </button>
         </form>
 

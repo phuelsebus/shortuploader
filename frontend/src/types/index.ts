@@ -1,6 +1,6 @@
-export type Platform = 'youtube' | 'tiktok' | 'instagram';
+export type Platform = "youtube" | "tiktok" | "instagram";
 
-export type UploadStatusValue = 'pending' | 'uploading' | 'success' | 'error';
+export type UploadStatusValue = "pending" | "uploading" | "success" | "error";
 
 export interface PlatformError {
   platform: Platform;

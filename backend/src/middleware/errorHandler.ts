@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import logger from '../utils/logger';
+import { Request, Response, NextFunction } from "express";
+import logger from "../utils/logger";
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -15,6 +15,6 @@ export function errorHandler(
   logger.error({ message: err.message, stack: err.stack });
   res.status(statusCode).json({
     success: false,
-    error: statusCode === 500 ? 'Internal server error' : err.message,
+    error: statusCode === 500 ? "Internal server error" : err.message,
   });
 }

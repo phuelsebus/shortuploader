@@ -1,18 +1,18 @@
-import axios from 'axios';
-import fs from 'fs';
-import { UploadJob } from '../types';
-import { getToken, setToken } from '../utils/tokenStore';
-import logger from '../utils/logger';
+import axios from "axios";
+import fs from "fs";
+import { UploadJob } from "../types";
+import { getToken, setToken } from "../utils/tokenStore";
+import logger from "../utils/logger";
 
-const TIKTOK_API_BASE = 'https://open.tiktokapis.com/v2';
-const TIKTOK_AUTH_BASE = 'https://www.tiktok.com/v2/auth/authorize';
+const TIKTOK_API_BASE = "https://open.tiktokapis.com/v2";
+const TIKTOK_AUTH_BASE = "https://www.tiktok.com/v2/auth/authorize";
 
 export function getTikTokAuthUrl(state: string): string {
   const params = new URLSearchParams({
-    client_key: process.env.TIKTOK_CLIENT_KEY ?? '',
-    scope: 'user.info.basic,video.publish',
-    response_type: 'code',
-    redirect_uri: `${process.env.SERVER_ORIGIN ?? 'http://localhost:3001'}/auth/tiktok/callback`,
+    client_key: process.env.TIKTOK_CLIENT_KEY ?? "",
+    scope: "user.info.basic,video.publish",
+    response_type: "code",
+    redirect_uri: `${process.env.SERVER_ORIGIN ?? "http://localhost:3001"}/auth/tiktok/callback`,
     state,
   });
   return `${TIKTOK_AUTH_BASE}?${params.toString()}`;
@@ -20,32 +20,34 @@ export function getTikTokAuthUrl(state: string): string {
 
 export async function exchangeTikTokCode(code: string): Promise<void> {
   const response = await axios.post(
-    'https://open.tiktokapis.com/v2/oauth/token/',
+    "https://open.tiktokapis.com/v2/oauth/token/",
     new URLSearchParams({
-      client_key: process.env.TIKTOK_CLIENT_KEY ?? '',
-      client_secret: process.env.TIKTOK_CLIENT_SECRET ?? '',
+      client_key: process.env.TIKTOK_CLIENT_KEY ?? "",
+      client_secret: process.env.TIKTOK_CLIENT_SECRET ?? "",
       code,
-      grant_type: 'authorization_code',
-      redirect_uri: `${process.env.SERVER_ORIGIN ?? 'http://localhost:3001'}/auth/tiktok/callback`,
+      grant_type: "authorization_code",
+      redirect_uri: `${process.env.SERVER_ORIGIN ?? "http://localhost:3001"}/auth/tiktok/callback`,
     }),
-    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
   );
-  setToken('tiktok', response.data as object);
+  setToken("tiktok", response.data as object);
 }
 
 async function getAccessToken(): Promise<string> {
-  const tokens = getToken<{ access_token: string }>('tiktok');
+  const tokens = getToken<{ access_token: string }>("tiktok");
   if (!tokens?.access_token) {
-    throw Object.assign(new Error('TikTok not authenticated'), {
-      platform: 'tiktok',
-      code: 'NOT_AUTHENTICATED',
+    throw Object.assign(new Error("TikTok not authenticated"), {
+      platform: "tiktok",
+      code: "NOT_AUTHENTICATED",
       retryable: false,
     });
   }
   return tokens.access_token;
 }
 
-export async function uploadToTikTok(job: UploadJob): Promise<string | undefined> {
+export async function uploadToTikTok(
+  job: UploadJob,
+): Promise<string | undefined> {
   const accessToken = await getAccessToken();
   const fileSize = fs.statSync(job.filePath).size;
 
@@ -57,13 +59,13 @@ export async function uploadToTikTok(job: UploadJob): Promise<string | undefined
     {
       post_info: {
         title: job.title.slice(0, 2200),
-        privacy_level: 'PUBLIC_TO_EVERYONE',
+        privacy_level: "PUBLIC_TO_EVERYONE",
         disable_duet: false,
         disable_comment: false,
         disable_stitch: false,
       },
       source_info: {
-        source: 'FILE_UPLOAD',
+        source: "FILE_UPLOAD",
         video_size: fileSize,
         chunk_size: fileSize,
         total_chunk_count: 1,
@@ -72,7 +74,7 @@ export async function uploadToTikTok(job: UploadJob): Promise<string | undefined
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json; charset=UTF-8',
+        "Content-Type": "application/json; charset=UTF-8",
       },
     },
   );
@@ -83,13 +85,13 @@ export async function uploadToTikTok(job: UploadJob): Promise<string | undefined
   const fileBuffer = fs.readFileSync(job.filePath);
   await axios.put(upload_url, fileBuffer, {
     headers: {
-      'Content-Type': 'video/mp4',
-      'Content-Range': `bytes 0-${fileBuffer.length - 1}/${fileBuffer.length}`,
-      'Content-Length': fileBuffer.length,
+      "Content-Type": "video/mp4",
+      "Content-Range": `bytes 0-${fileBuffer.length - 1}/${fileBuffer.length}`,
+      "Content-Length": fileBuffer.length,
     },
   });
 
-  logger.info({ message: 'TikTok upload initiated', publish_id });
+  logger.info({ message: "TikTok upload initiated", publish_id });
   // TikTok processes the video asynchronously; no immediate URL is returned.
   return undefined;
 }

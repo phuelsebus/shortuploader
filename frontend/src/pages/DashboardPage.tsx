@@ -1,11 +1,11 @@
-import { Link } from 'react-router-dom';
-import { usePlatformAuth } from '../hooks/usePlatformAuth';
-import { Platform } from '../types';
+import { Link } from "react-router-dom";
+import { usePlatformAuth } from "../hooks/usePlatformAuth";
+import { Platform } from "../types";
 
 const PLATFORMS: { id: Platform; label: string; icon: string }[] = [
-  { id: 'youtube', label: 'YouTube', icon: '▶️' },
-  { id: 'tiktok', label: 'TikTok', icon: '🎵' },
-  { id: 'instagram', label: 'Instagram', icon: '📸' },
+  { id: "youtube", label: "YouTube", icon: "▶️" },
+  { id: "tiktok", label: "TikTok", icon: "🎵" },
+  { id: "instagram", label: "Instagram", icon: "📸" },
 ];
 
 export function DashboardPage() {
@@ -16,11 +16,15 @@ export function DashboardPage() {
       <div className="mx-auto max-w-lg space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">Connect your social media accounts.</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Connect your social media accounts.
+          </p>
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-sm space-y-3">
-          <p className="text-sm font-semibold text-gray-700">Connected Accounts</p>
+          <p className="text-sm font-semibold text-gray-700">
+            Connected Accounts
+          </p>
           {PLATFORMS.map((p) => (
             <div
               key={p.id}

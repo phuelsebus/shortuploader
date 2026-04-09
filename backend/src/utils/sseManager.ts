@@ -1,5 +1,5 @@
-import { Response } from 'express';
-import { Platform, PlatformStatus } from '../types';
+import { Response } from "express";
+import { Platform, PlatformStatus } from "../types";
 
 const clients = new Map<string, Response>();
 
@@ -11,7 +11,11 @@ export function removeClient(jobId: string): void {
   clients.delete(jobId);
 }
 
-export function emitStatus(jobId: string, platform: Platform, status: PlatformStatus): void {
+export function emitStatus(
+  jobId: string,
+  platform: Platform,
+  status: PlatformStatus,
+): void {
   const res = clients.get(jobId);
   if (res) {
     res.write(`data: ${JSON.stringify({ platform, ...status })}\n\n`);

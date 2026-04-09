@@ -1,5 +1,5 @@
-import { connectPlatform, disconnectPlatform } from '../services/api';
-import { Platform } from '../types';
+import { connectPlatform, disconnectPlatform } from "../services/api";
+import { Platform } from "../types";
 
 export function usePlatformAuth() {
   return {

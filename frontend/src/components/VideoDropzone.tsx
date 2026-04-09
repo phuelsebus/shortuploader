@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from "react";
 
-const ACCEPTED_TYPES = ['video/mp4', 'video/quicktime'];
+const ACCEPTED_TYPES = ["video/mp4", "video/quicktime"];
 const MAX_SIZE_BYTES = 512 * 1024 * 1024;
 
 interface VideoDropzoneProps {
@@ -17,11 +17,11 @@ export function VideoDropzone({ onFile }: VideoDropzoneProps) {
     (file: File) => {
       setError(null);
       if (!ACCEPTED_TYPES.includes(file.type)) {
-        setError('Only MP4 and MOV files are supported.');
+        setError("Only MP4 and MOV files are supported.");
         return;
       }
       if (file.size > MAX_SIZE_BYTES) {
-        setError('File must be smaller than 512 MB.');
+        setError("File must be smaller than 512 MB.");
         return;
       }
       if (preview) URL.revokeObjectURL(preview);
@@ -48,7 +48,7 @@ export function VideoDropzone({ onFile }: VideoDropzoneProps) {
         tabIndex={0}
         aria-label="Upload video"
         onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
+        onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
         onDragOver={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -57,12 +57,14 @@ export function VideoDropzone({ onFile }: VideoDropzoneProps) {
         onDrop={onDrop}
         className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 cursor-pointer transition-colors duration-200 ${
           dragging
-            ? 'border-violet-500 bg-violet-50'
-            : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+            ? "border-violet-500 bg-violet-50"
+            : "border-gray-300 bg-gray-50 hover:bg-gray-100"
         }`}
       >
         <span className="text-4xl mb-3">🎬</span>
-        <p className="text-sm font-medium text-gray-700">Drag & drop your video here</p>
+        <p className="text-sm font-medium text-gray-700">
+          Drag & drop your video here
+        </p>
         <p className="text-xs text-gray-500 mt-1">MP4 or MOV · max 512 MB</p>
         <input
           ref={inputRef}

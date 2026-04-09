@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { getToken } from '../utils/tokenStore';
-import { Platform } from '../types';
+import { Request, Response, NextFunction } from "express";
+import { getToken } from "../utils/tokenStore";
+import { Platform } from "../types";
 
 export function requirePlatformAuth(platform: Platform) {
   return (_req: Request, res: Response, next: NextFunction): void => {

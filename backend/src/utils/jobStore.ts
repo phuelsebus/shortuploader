@@ -1,4 +1,4 @@
-import { UploadJob } from '../types';
+import { UploadJob } from "../types";
 
 const jobs = new Map<string, UploadJob>();
 

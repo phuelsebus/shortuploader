@@ -1,10 +1,10 @@
-import { Platform, PlatformStatus } from '../types';
-import { StatusMap } from '../hooks/useUploadStatus';
+import { Platform, PlatformStatus } from "../types";
+import { StatusMap } from "../hooks/useUploadStatus";
 
 const PLATFORM_LABELS: Record<Platform, string> = {
-  youtube: 'YouTube Shorts',
-  tiktok: 'TikTok',
-  instagram: 'Instagram Reels',
+  youtube: "YouTube Shorts",
+  tiktok: "TikTok",
+  instagram: "Instagram Reels",
 };
 
 interface UploadProgressProps {
@@ -13,7 +13,11 @@ interface UploadProgressProps {
   onRetry?: (platform: Platform) => void;
 }
 
-export function UploadProgress({ platforms, statuses, onRetry }: UploadProgressProps) {
+export function UploadProgress({
+  platforms,
+  statuses,
+  onRetry,
+}: UploadProgressProps) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm font-semibold text-gray-700">Upload progress</p>
@@ -22,8 +26,14 @@ export function UploadProgress({ platforms, statuses, onRetry }: UploadProgressP
           key={platform}
           className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm"
         >
-          <span className="text-sm font-medium text-gray-800">{PLATFORM_LABELS[platform]}</span>
-          <StatusBadge status={statuses[platform]} platform={platform} onRetry={onRetry} />
+          <span className="text-sm font-medium text-gray-800">
+            {PLATFORM_LABELS[platform]}
+          </span>
+          <StatusBadge
+            status={statuses[platform]}
+            platform={platform}
+            onRetry={onRetry}
+          />
         </div>
       ))}
     </div>
@@ -39,11 +49,11 @@ function StatusBadge({
   platform: Platform;
   onRetry?: (platform: Platform) => void;
 }) {
-  if (!status || status.status === 'pending') {
+  if (!status || status.status === "pending") {
     return <span className="text-xs text-gray-400">Waiting…</span>;
   }
 
-  if (status.status === 'uploading') {
+  if (status.status === "uploading") {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-blue-600">
         <span className="animate-spin inline-block">⏳</span> Uploading
@@ -51,16 +61,21 @@ function StatusBadge({
     );
   }
 
-  if (status.status === 'success') {
+  if (status.status === "success") {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-green-600">
-        ✅{' '}
+        ✅{" "}
         {status.url ? (
-          <a href={status.url} target="_blank" rel="noreferrer" className="underline">
+          <a
+            href={status.url}
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
             View
           </a>
         ) : (
-          'Done'
+          "Done"
         )}
       </span>
     );
@@ -68,7 +83,7 @@ function StatusBadge({
 
   return (
     <span className="inline-flex items-center gap-2 text-xs text-red-600">
-      ❌ {status.error?.message ?? 'Failed'}
+      ❌ {status.error?.message ?? "Failed"}
       {status.error?.retryable && onRetry && (
         <button
           onClick={() => onRetry(platform)}

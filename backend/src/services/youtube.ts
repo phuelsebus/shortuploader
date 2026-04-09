@@ -1,75 +1,79 @@
-import { google } from 'googleapis';
-import fs from 'fs';
-import { UploadJob } from '../types';
-import { getToken, setToken } from '../utils/tokenStore';
-import logger from '../utils/logger';
+import { google } from "googleapis";
+import fs from "fs";
+import { UploadJob } from "../types";
+import { getToken, setToken } from "../utils/tokenStore";
+import logger from "../utils/logger";
 
-const SCOPES = ['https://www.googleapis.com/auth/youtube.upload'];
+const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
 
 function getOAuth2Client() {
   return new google.auth.OAuth2(
     process.env.YOUTUBE_CLIENT_ID,
     process.env.YOUTUBE_CLIENT_SECRET,
-    `${process.env.SERVER_ORIGIN ?? 'http://localhost:3001'}/auth/youtube/callback`,
+    `${process.env.SERVER_ORIGIN ?? "http://localhost:3001"}/auth/youtube/callback`,
   );
 }
 
 export function getYouTubeAuthUrl(state: string): string {
   const client = getOAuth2Client();
   return client.generateAuthUrl({
-    access_type: 'offline',
+    access_type: "offline",
     scope: SCOPES,
     state,
-    prompt: 'consent',
+    prompt: "consent",
   });
 }
 
 export async function exchangeYouTubeCode(code: string): Promise<void> {
   const client = getOAuth2Client();
   const { tokens } = await client.getToken(code);
-  setToken('youtube', tokens);
+  setToken("youtube", tokens);
 }
 
 async function getAuthenticatedClient() {
-  const tokens = getToken<Record<string, unknown>>('youtube');
+  const tokens = getToken<Record<string, unknown>>("youtube");
   if (!tokens) {
-    throw Object.assign(new Error('YouTube not authenticated'), {
-      platform: 'youtube',
-      code: 'NOT_AUTHENTICATED',
+    throw Object.assign(new Error("YouTube not authenticated"), {
+      platform: "youtube",
+      code: "NOT_AUTHENTICATED",
       retryable: false,
     });
   }
   const client = getOAuth2Client();
   client.setCredentials(tokens);
-  client.on('tokens', (newTokens) => {
-    setToken('youtube', { ...tokens, ...newTokens });
-    logger.info('YouTube tokens refreshed');
+  client.on("tokens", (newTokens) => {
+    setToken("youtube", { ...tokens, ...newTokens });
+    logger.info("YouTube tokens refreshed");
   });
   return client;
 }
 
-export async function uploadToYouTube(job: UploadJob): Promise<string | undefined> {
+export async function uploadToYouTube(
+  job: UploadJob,
+): Promise<string | undefined> {
   const auth = await getAuthenticatedClient();
-  const youtube = google.youtube({ version: 'v3', auth });
+  const youtube = google.youtube({ version: "v3", auth });
 
-  const title = job.title.includes('#shorts') ? job.title : `${job.title} #shorts`;
+  const title = job.title.includes("#shorts")
+    ? job.title
+    : `${job.title} #shorts`;
 
   const response = await youtube.videos.insert({
-    part: ['snippet', 'status'],
+    part: ["snippet", "status"],
     requestBody: {
       snippet: {
         title: title.slice(0, 100),
         description: job.description,
         tags: job.tags,
-        categoryId: '22',
+        categoryId: "22",
       },
       status: {
-        privacyStatus: 'public',
+        privacyStatus: "public",
         selfDeclaredMadeForKids: false,
       },
     },
     media: {
-      mimeType: 'video/mp4',
+      mimeType: "video/mp4",
       body: fs.createReadStream(job.filePath),
     },
   });

@@ -22,6 +22,7 @@ cp frontend/.env.example frontend/.env
 Edit `backend/.env` with your API credentials (see **Environment Variables** below).
 
 Generate a `TOKEN_ENCRYPTION_KEY`:
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
@@ -48,13 +49,14 @@ docker compose up --build
 
 Each platform requires an OAuth app. Register at:
 
-| Platform | Developer Console |
-|---|---|
-| YouTube | [Google Cloud Console](https://console.cloud.google.com) — enable YouTube Data API v3 |
-| TikTok | [TikTok for Developers](https://developers.tiktok.com) — request `video.publish` scope |
-| Instagram | [Meta for Developers](https://developers.facebook.com) — Instagram Graph API |
+| Platform  | Developer Console                                                                      |
+| --------- | -------------------------------------------------------------------------------------- |
+| YouTube   | [Google Cloud Console](https://console.cloud.google.com) — enable YouTube Data API v3  |
+| TikTok    | [TikTok for Developers](https://developers.tiktok.com) — request `video.publish` scope |
+| Instagram | [Meta for Developers](https://developers.facebook.com) — Instagram Graph API           |
 
 Set each platform's redirect URI to:
+
 ```
 http://localhost:3001/auth/<platform>/callback
 ```

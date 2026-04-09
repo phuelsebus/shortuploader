@@ -1,7 +1,7 @@
-import 'express-session';
-import type { Platform } from './index';
+import "express-session";
+import type { Platform } from "./index";
 
-declare module 'express-session' {
+declare module "express-session" {
   interface SessionData {
     oauthState?: string;
     oauthPlatform?: Platform;
