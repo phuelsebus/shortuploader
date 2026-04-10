@@ -5,7 +5,7 @@ import { registerClient, removeClient } from "../utils/sseManager";
 const router = Router();
 
 router.get("/:jobId", (req: Request, res: Response): void => {
-  const { jobId } = req.params;
+  const jobId = req.params.jobId as string;
   const job = getJob(jobId);
 
   if (!job) {

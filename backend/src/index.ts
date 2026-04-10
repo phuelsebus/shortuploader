@@ -3,6 +3,7 @@ import express from "express";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import passport from "./utils/passport";
 import uploadRouter from "./routes/upload";
 import authRouter from "./routes/auth";
 import statusRouter from "./routes/status";
@@ -39,6 +40,9 @@ app.use(
     },
   }),
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use("/api/upload", uploadRouter);
 app.use("/auth", authRouter);

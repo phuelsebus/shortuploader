@@ -17,6 +17,7 @@ export interface PlatformError {
 
 export interface UploadJob {
   jobId: string;
+  userId: string;
   title: string;
   description: string;
   tags: string[];

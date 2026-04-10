@@ -1,7 +1,7 @@
 import axios from "axios";
 import path from "path";
 import { UploadJob } from "../types";
-import { getToken, setToken } from "../utils/tokenStore";
+import { getUserToken, setUserToken } from "../utils/userStore";
 import logger from "../utils/logger";
 
 const GRAPH_API_BASE = "https://graph.facebook.com/v21.0";
@@ -19,7 +19,7 @@ export function getInstagramAuthUrl(state: string): string {
   return `https://api.instagram.com/oauth/authorize?${params.toString()}`;
 }
 
-export async function exchangeInstagramCode(code: string): Promise<void> {
+export async function exchangeInstagramCode(code: string, userId: string): Promise<void> {
   // Exchange code for short-lived token
   const shortLived = await axios.post<{
     access_token: string;
@@ -48,18 +48,19 @@ export async function exchangeInstagramCode(code: string): Promise<void> {
     },
   });
 
-  setToken("instagram", {
+  await setUserToken(userId, "instagram", {
     access_token: longLived.data.access_token,
     user_id: shortLived.data.user_id,
     expires_in: longLived.data.expires_in,
   });
 }
 
-async function getCredentials(): Promise<{
+async function getCredentials(userId: string): Promise<{
   accessToken: string;
-  userId: string;
+  igUserId: string;
 }> {
-  const tokens = getToken<{ access_token: string; user_id: string }>(
+  const tokens = await getUserToken<{ access_token: string; user_id: string }>(
+    userId,
     "instagram",
   );
   if (!tokens?.access_token) {
@@ -69,13 +70,13 @@ async function getCredentials(): Promise<{
       retryable: false,
     });
   }
-  return { accessToken: tokens.access_token, userId: tokens.user_id };
+  return { accessToken: tokens.access_token, igUserId: tokens.user_id };
 }
 
 export async function uploadToInstagram(
   job: UploadJob,
 ): Promise<string | undefined> {
-  const { accessToken, userId } = await getCredentials();
+  const { accessToken, igUserId } = await getCredentials(job.userId);
 
   // Instagram requires a publicly accessible video URL before creating a container.
   // Set INSTAGRAM_VIDEO_BASE_URL to your public storage bucket base URL.
@@ -102,7 +103,7 @@ export async function uploadToInstagram(
 
   // Step 1: Create media container
   const containerRes = await axios.post<{ id: string }>(
-    `${GRAPH_API_BASE}/${userId}/media`,
+    `${GRAPH_API_BASE}/${igUserId}/media`,
     null,
     {
       params: {
@@ -146,7 +147,7 @@ export async function uploadToInstagram(
 
   // Step 3: Publish
   const publishRes = await axios.post<{ id: string }>(
-    `${GRAPH_API_BASE}/${userId}/media_publish`,
+    `${GRAPH_API_BASE}/${igUserId}/media_publish`,
     null,
     { params: { creation_id: containerId, access_token: accessToken } },
   );
