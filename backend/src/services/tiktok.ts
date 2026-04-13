@@ -18,7 +18,10 @@ export function getTikTokAuthUrl(state: string): string {
   return `${TIKTOK_AUTH_BASE}?${params.toString()}`;
 }
 
-export async function exchangeTikTokCode(code: string, userId: string): Promise<void> {
+export async function exchangeTikTokCode(
+  code: string,
+  userId: string,
+): Promise<void> {
   const response = await axios.post(
     "https://open.tiktokapis.com/v2/oauth/token/",
     new URLSearchParams({

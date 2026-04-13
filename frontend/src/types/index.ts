@@ -20,3 +20,14 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+export interface ConnectedPlatforms {
+  youtube: boolean;
+  tiktok: boolean;
+  instagram: boolean;
+}
+
+export interface AuthUser {
+  userId: string;
+  connected: ConnectedPlatforms;
+}

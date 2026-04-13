@@ -21,7 +21,11 @@ export function encrypt(plaintext: string): string {
     cipher.final(),
   ]);
   const tag = cipher.getAuthTag();
-  return [iv.toString("hex"), tag.toString("hex"), encrypted.toString("hex")].join(":");
+  return [
+    iv.toString("hex"),
+    tag.toString("hex"),
+    encrypted.toString("hex"),
+  ].join(":");
 }
 
 export function decrypt(ciphertext: string): string {
@@ -32,5 +36,7 @@ export function decrypt(ciphertext: string): string {
   const encrypted = Buffer.from(encryptedHex, "hex");
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
+  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString(
+    "utf8",
+  );
 }

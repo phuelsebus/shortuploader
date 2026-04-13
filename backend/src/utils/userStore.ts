@@ -49,7 +49,9 @@ export async function getUserToken<T>(
 
   if (error || !data) return null;
 
-  const encrypted = (data as Record<string, string | null>)[`${platform}_token`];
+  const encrypted = (data as Record<string, string | null>)[
+    `${platform}_token`
+  ];
   if (!encrypted) return null;
 
   try {
@@ -81,7 +83,8 @@ export async function getConnectedPlatforms(
     .eq("id", userId)
     .single();
 
-  if (error || !data) return { youtube: false, tiktok: false, instagram: false };
+  if (error || !data)
+    return { youtube: false, tiktok: false, instagram: false };
   const d = data as Record<string, string | null>;
   return {
     youtube: !!d.youtube_token,

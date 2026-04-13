@@ -19,7 +19,10 @@ export function getInstagramAuthUrl(state: string): string {
   return `https://api.instagram.com/oauth/authorize?${params.toString()}`;
 }
 
-export async function exchangeInstagramCode(code: string, userId: string): Promise<void> {
+export async function exchangeInstagramCode(
+  code: string,
+  userId: string,
+): Promise<void> {
   // Exchange code for short-lived token
   const shortLived = await axios.post<{
     access_token: string;

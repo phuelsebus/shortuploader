@@ -19,7 +19,10 @@ const authUrlFns: Record<Platform, (state: string) => string> = {
   instagram: getInstagramAuthUrl,
 };
 
-const exchangeFns: Record<Platform, (code: string, userId: string) => Promise<void>> = {
+const exchangeFns: Record<
+  Platform,
+  (code: string, userId: string) => Promise<void>
+> = {
   youtube: exchangeYouTubeCode,
   tiktok: exchangeTikTokCode,
   instagram: exchangeInstagramCode,
@@ -37,7 +40,9 @@ router.get(
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: `${process.env.CLIENT_ORIGIN ?? "http://localhost:5173"}/login?error=google_failed` }),
+  passport.authenticate("google", {
+    failureRedirect: `${process.env.CLIENT_ORIGIN ?? "http://localhost:5173"}/login?error=google_failed`,
+  }),
   (req: Request, res: Response) => {
     const user = req.user as { id: string };
     req.session.userId = user.id;
@@ -45,15 +50,18 @@ router.get(
   },
 );
 
-router.post("/logout", (req: Request, res: Response, next: NextFunction): void => {
-  req.logout((err) => {
-    if (err) return next(err);
-    req.session.destroy(() => {
-      res.clearCookie("connect.sid");
-      res.json({ success: true });
+router.post(
+  "/logout",
+  (req: Request, res: Response, next: NextFunction): void => {
+    req.logout((err) => {
+      if (err) return next(err);
+      req.session.destroy(() => {
+        res.clearCookie("connect.sid");
+        res.json({ success: true });
+      });
     });
-  });
-});
+  },
+);
 
 router.get("/me", async (req: Request, res: Response): Promise<void> => {
   const userId = req.session.userId;
@@ -112,15 +120,18 @@ router.get(
   },
 );
 
-router.delete("/:platform", async (req: Request, res: Response): Promise<void> => {
-  const platform = req.params.platform as Platform;
-  const userId = req.session.userId;
-  if (!userId) {
-    res.status(401).json({ success: false, error: "Not logged in" });
-    return;
-  }
-  await deleteUserToken(userId, platform);
-  res.json({ success: true });
-});
+router.delete(
+  "/:platform",
+  async (req: Request, res: Response): Promise<void> => {
+    const platform = req.params.platform as Platform;
+    const userId = req.session.userId;
+    if (!userId) {
+      res.status(401).json({ success: false, error: "Not logged in" });
+      return;
+    }
+    await deleteUserToken(userId, platform);
+    res.json({ success: true });
+  },
+);
 
 export default router;

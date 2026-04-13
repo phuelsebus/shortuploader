@@ -133,12 +133,10 @@ router.post(
 
     if (!title || platforms.length === 0) {
       fs.unlinkSync(file.path);
-      res
-        .status(400)
-        .json({
-          success: false,
-          error: "title and at least one platform are required",
-        });
+      res.status(400).json({
+        success: false,
+        error: "title and at least one platform are required",
+      });
       return;
     }
 

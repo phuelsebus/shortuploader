@@ -24,7 +24,10 @@ export function getYouTubeAuthUrl(state: string): string {
   });
 }
 
-export async function exchangeYouTubeCode(code: string, userId: string): Promise<void> {
+export async function exchangeYouTubeCode(
+  code: string,
+  userId: string,
+): Promise<void> {
   const client = getOAuth2Client();
   const { tokens } = await client.getToken(code);
   await setUserToken(userId, "youtube", tokens);
