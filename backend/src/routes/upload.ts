@@ -91,6 +91,12 @@ router.post(
   uploadRateLimiter,
   upload.single("video"),
   async (req: Request, res: Response): Promise<void> => {
+    const userId = req.session.userId;
+    if (!userId) {
+      res.status(401).json({ success: false, error: "Not logged in" });
+      return;
+    }
+
     const file = req.file;
     if (!file) {
       res.status(400).json({ success: false, error: "No video file provided" });
@@ -127,18 +133,17 @@ router.post(
 
     if (!title || platforms.length === 0) {
       fs.unlinkSync(file.path);
-      res
-        .status(400)
-        .json({
-          success: false,
-          error: "title and at least one platform are required",
-        });
+      res.status(400).json({
+        success: false,
+        error: "title and at least one platform are required",
+      });
       return;
     }
 
     const jobId = uuidv4();
     const job: UploadJob = {
       jobId,
+      userId,
       title,
       description: description ?? "",
       tags,
