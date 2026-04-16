@@ -43,10 +43,13 @@ router.get(
   passport.authenticate("google", {
     failureRedirect: `${process.env.CLIENT_ORIGIN ?? "http://localhost:5173"}/login?error=google_failed`,
   }),
-  (req: Request, res: Response) => {
+  (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as { id: string };
     req.session.userId = user.id;
-    res.redirect(`${CLIENT_ORIGIN()}/dashboard`);
+    req.session.save((err) => {
+      if (err) return next(err);
+      res.redirect(`${CLIENT_ORIGIN()}/dashboard`);
+    });
   },
 );
 
