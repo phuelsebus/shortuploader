@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 import fs from "fs";
 import { UploadJob } from "../types";
-import { getToken, setToken } from "../utils/tokenStore";
+import { getUserToken, setUserToken } from "../utils/userStore";
 import logger from "../utils/logger";
 
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
@@ -24,14 +24,17 @@ export function getYouTubeAuthUrl(state: string): string {
   });
 }
 
-export async function exchangeYouTubeCode(code: string): Promise<void> {
+export async function exchangeYouTubeCode(
+  code: string,
+  userId: string,
+): Promise<void> {
   const client = getOAuth2Client();
   const { tokens } = await client.getToken(code);
-  setToken("youtube", tokens);
+  await setUserToken(userId, "youtube", tokens);
 }
 
-async function getAuthenticatedClient() {
-  const tokens = getToken<Record<string, unknown>>("youtube");
+async function getAuthenticatedClient(userId: string) {
+  const tokens = await getUserToken<Record<string, unknown>>(userId, "youtube");
   if (!tokens) {
     throw Object.assign(new Error("YouTube not authenticated"), {
       platform: "youtube",
@@ -42,7 +45,7 @@ async function getAuthenticatedClient() {
   const client = getOAuth2Client();
   client.setCredentials(tokens);
   client.on("tokens", (newTokens) => {
-    setToken("youtube", { ...tokens, ...newTokens });
+    void setUserToken(userId, "youtube", { ...tokens, ...newTokens });
     logger.info("YouTube tokens refreshed");
   });
   return client;
@@ -51,7 +54,7 @@ async function getAuthenticatedClient() {
 export async function uploadToYouTube(
   job: UploadJob,
 ): Promise<string | undefined> {
-  const auth = await getAuthenticatedClient();
+  const auth = await getAuthenticatedClient(job.userId);
   const youtube = google.youtube({ version: "v3", auth });
 
   const title = job.title.includes("#shorts")

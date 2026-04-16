@@ -1,7 +1,7 @@
 import axios from "axios";
 import fs from "fs";
 import { UploadJob } from "../types";
-import { getToken, setToken } from "../utils/tokenStore";
+import { getUserToken, setUserToken } from "../utils/userStore";
 import logger from "../utils/logger";
 
 const TIKTOK_API_BASE = "https://open.tiktokapis.com/v2";
@@ -18,7 +18,10 @@ export function getTikTokAuthUrl(state: string): string {
   return `${TIKTOK_AUTH_BASE}?${params.toString()}`;
 }
 
-export async function exchangeTikTokCode(code: string): Promise<void> {
+export async function exchangeTikTokCode(
+  code: string,
+  userId: string,
+): Promise<void> {
   const response = await axios.post(
     "https://open.tiktokapis.com/v2/oauth/token/",
     new URLSearchParams({
@@ -30,11 +33,11 @@ export async function exchangeTikTokCode(code: string): Promise<void> {
     }),
     { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
   );
-  setToken("tiktok", response.data as object);
+  await setUserToken(userId, "tiktok", response.data as object);
 }
 
-async function getAccessToken(): Promise<string> {
-  const tokens = getToken<{ access_token: string }>("tiktok");
+async function getAccessToken(userId: string): Promise<string> {
+  const tokens = await getUserToken<{ access_token: string }>(userId, "tiktok");
   if (!tokens?.access_token) {
     throw Object.assign(new Error("TikTok not authenticated"), {
       platform: "tiktok",
@@ -48,7 +51,7 @@ async function getAccessToken(): Promise<string> {
 export async function uploadToTikTok(
   job: UploadJob,
 ): Promise<string | undefined> {
-  const accessToken = await getAccessToken();
+  const accessToken = await getAccessToken(job.userId);
   const fileSize = fs.statSync(job.filePath).size;
 
   // Step 1: Initialise upload
