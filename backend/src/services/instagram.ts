@@ -2,9 +2,12 @@ import axios from "axios";
 import path from "path";
 import { UploadJob } from "../types";
 import { getUserToken, setUserToken } from "../utils/userStore";
+import { uploadToS3, deleteFromS3 } from "../utils/storageService";
 import logger from "../utils/logger";
 
 const GRAPH_API_BASE = "https://graph.facebook.com/v21.0";
+// Instagram Graph API base (new Instagram API, replaces deprecated Basic Display API)
+const INSTAGRAM_GRAPH_BASE = "https://graph.instagram.com";
 const CONTAINER_POLL_INTERVAL_MS = 5_000;
 const CONTAINER_POLL_RETRIES = 12; // max 60 s
 
@@ -16,7 +19,8 @@ export function getInstagramAuthUrl(state: string): string {
     response_type: "code",
     state,
   });
-  return `https://api.instagram.com/oauth/authorize?${params.toString()}`;
+  // New Instagram API with Instagram Login (Basic Display API deprecated Sept 2024)
+  return `https://www.instagram.com/oauth/authorize?${params.toString()}`;
 }
 
 export async function exchangeInstagramCode(
@@ -39,11 +43,11 @@ export async function exchangeInstagramCode(
     { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
   );
 
-  // Exchange for long-lived token (valid 60 days)
+  // Exchange for long-lived token (valid 60 days) via new Instagram Graph API
   const longLived = await axios.get<{
     access_token: string;
     expires_in: number;
-  }>(`${GRAPH_API_BASE}/oauth/access_token`, {
+  }>(`${INSTAGRAM_GRAPH_BASE}/access_token`, {
     params: {
       grant_type: "ig_exchange_token",
       client_secret: process.env.INSTAGRAM_APP_SECRET,
@@ -81,21 +85,19 @@ export async function uploadToInstagram(
 ): Promise<string | undefined> {
   const { accessToken, igUserId } = await getCredentials(job.userId);
 
-  // Instagram requires a publicly accessible video URL before creating a container.
-  // Set INSTAGRAM_VIDEO_BASE_URL to your public storage bucket base URL.
+  // Determine video URL:
+  // - If INSTAGRAM_VIDEO_BASE_URL is set, use the static base URL (legacy / manual hosting).
+  // - Otherwise, upload the file to S3 automatically and use the resulting public URL.
   const baseUrl = process.env.INSTAGRAM_VIDEO_BASE_URL;
-  if (!baseUrl) {
-    throw Object.assign(
-      new Error(
-        "Instagram Reels upload requires INSTAGRAM_VIDEO_BASE_URL — " +
-          "a publicly accessible base URL where the video file is hosted (e.g. S3, GCS). " +
-          "Upload the file there first and set this environment variable.",
-      ),
-      { platform: "instagram", code: "REQUIRES_PUBLIC_URL", retryable: false },
-    );
-  }
+  let videoUrl: string;
+  let uploadedToS3 = false;
 
-  const videoUrl = `${baseUrl}/${path.basename(job.filePath)}`;
+  if (baseUrl) {
+    videoUrl = `${baseUrl}/${path.basename(job.filePath)}`;
+  } else {
+    videoUrl = await uploadToS3(job.filePath);
+    uploadedToS3 = true;
+  }
   const caption = [
     job.title,
     job.description,
@@ -157,5 +159,11 @@ export async function uploadToInstagram(
 
   const mediaId = publishRes.data.id;
   logger.info({ message: "Instagram Reel published", mediaId });
+
+  // Clean up the S3 object after a successful publish (only if we uploaded it).
+  if (uploadedToS3) {
+    await deleteFromS3(job.filePath);
+  }
+
   return `https://www.instagram.com/reel/${mediaId}/`;
 }

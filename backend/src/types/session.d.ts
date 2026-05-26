@@ -6,5 +6,7 @@ declare module "express-session" {
     oauthState?: string;
     oauthPlatform?: Platform;
     userId?: string;
+    /** PKCE code_verifier for TikTok OAuth — generated per auth request */
+    tiktokCodeVerifier?: string;
   }
 }

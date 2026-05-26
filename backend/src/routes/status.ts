@@ -4,9 +4,9 @@ import { registerClient, removeClient } from "../utils/sseManager";
 
 const router = Router();
 
-router.get("/:jobId", (req: Request, res: Response): void => {
+router.get("/:jobId", async (req: Request, res: Response): Promise<void> => {
   const jobId = req.params.jobId as string;
-  const job = getJob(jobId);
+  const job = await getJob(jobId);
 
   if (!job) {
     res.status(404).json({ success: false, error: "Job not found" });

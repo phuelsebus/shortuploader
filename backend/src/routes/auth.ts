@@ -3,7 +3,11 @@ import crypto from "crypto";
 import passport from "passport";
 import { Platform } from "../types";
 import { getYouTubeAuthUrl, exchangeYouTubeCode } from "../services/youtube";
-import { getTikTokAuthUrl, exchangeTikTokCode } from "../services/tiktok";
+import {
+  getTikTokAuthUrl,
+  exchangeTikTokCode,
+  generateCodeVerifier,
+} from "../services/tiktok";
 import {
   getInstagramAuthUrl,
   exchangeInstagramCode,
@@ -12,21 +16,6 @@ import { deleteUserToken, getConnectedPlatforms } from "../utils/userStore";
 import logger from "../utils/logger";
 
 const router = Router();
-
-const authUrlFns: Record<Platform, (state: string) => string> = {
-  youtube: getYouTubeAuthUrl,
-  tiktok: getTikTokAuthUrl,
-  instagram: getInstagramAuthUrl,
-};
-
-const exchangeFns: Record<
-  Platform,
-  (code: string, userId: string) => Promise<void>
-> = {
-  youtube: exchangeYouTubeCode,
-  tiktok: exchangeTikTokCode,
-  instagram: exchangeInstagramCode,
-};
 
 const CLIENT_ORIGIN = () =>
   process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
@@ -80,7 +69,8 @@ router.get("/me", async (req: Request, res: Response): Promise<void> => {
 
 router.get("/:platform", (req: Request, res: Response): void => {
   const platform = req.params.platform as Platform;
-  if (!authUrlFns[platform]) {
+
+  if (!["youtube", "tiktok", "instagram"].includes(platform)) {
     res.status(404).json({ success: false, error: "Unknown platform" });
     return;
   }
@@ -88,10 +78,26 @@ router.get("/:platform", (req: Request, res: Response): void => {
     res.status(401).json({ success: false, error: "Not logged in" });
     return;
   }
+
   const state = crypto.randomBytes(16).toString("hex");
   req.session.oauthState = state;
   req.session.oauthPlatform = platform;
-  res.redirect(authUrlFns[platform](state));
+
+  let authUrl: string;
+
+  if (platform === "tiktok") {
+    // TikTok requires PKCE: generate code_verifier, derive code_challenge
+    const codeVerifier = generateCodeVerifier();
+    req.session.tiktokCodeVerifier = codeVerifier;
+    authUrl = getTikTokAuthUrl(state, codeVerifier);
+  } else if (platform === "instagram") {
+    authUrl = getInstagramAuthUrl(state);
+  } else {
+    authUrl = getYouTubeAuthUrl(state);
+  }
+
+  logger.info({ message: "Redirecting to platform OAuth", platform, authUrl });
+  res.redirect(authUrl);
 });
 
 router.get(
@@ -112,7 +118,23 @@ router.get(
     }
 
     try {
-      await exchangeFns[platform](code, userId);
+      if (platform === "tiktok") {
+        const codeVerifier = req.session.tiktokCodeVerifier;
+        if (!codeVerifier) {
+          res.redirect(
+            `${CLIENT_ORIGIN()}/auth/error?reason=missing_code_verifier`,
+          );
+          return;
+        }
+        await exchangeTikTokCode(code, userId, codeVerifier);
+        // Clean up verifier from session
+        delete req.session.tiktokCodeVerifier;
+      } else if (platform === "instagram") {
+        await exchangeInstagramCode(code, userId);
+      } else {
+        await exchangeYouTubeCode(code, userId);
+      }
+
       res.redirect(`${CLIENT_ORIGIN()}/auth/success?platform=${platform}`);
     } catch (err) {
       logger.error({ message: "OAuth exchange failed", platform, err });

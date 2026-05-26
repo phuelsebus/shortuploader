@@ -3,9 +3,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-import { Platform, UploadJob } from "../types";
+import { Platform, PlatformStatus, UploadJob } from "../types";
 import { uploadRateLimiter } from "../middleware/rateLimiter";
-import { createJob } from "../utils/jobStore";
+import { createJob, updateJob } from "../utils/jobStore";
 import { uploadToYouTube } from "../services/youtube";
 import { uploadToTikTok } from "../services/tiktok";
 import { uploadToInstagram } from "../services/instagram";
@@ -50,12 +50,24 @@ async function runUploads(
   platforms: Platform[],
   job: UploadJob,
 ): Promise<void> {
+  // Helper: persist status to Supabase and emit over SSE
+  async function persistAndEmit(
+    platform: Platform,
+    status: PlatformStatus,
+  ): Promise<void> {
+    job.statuses[platform] = status;
+    emitStatus(jobId, platform, status);
+    await updateJob(jobId, { statuses: job.statuses }).catch((err) =>
+      logger.warn({ message: "Failed to persist job status", platform, err }),
+    );
+  }
+
   await Promise.allSettled(
     platforms.map(async (platform) => {
-      emitStatus(jobId, platform, { status: "uploading" });
+      await persistAndEmit(platform, { status: "uploading" });
       try {
         const url = await uploaders[platform](job);
-        emitStatus(jobId, platform, { status: "success", url });
+        await persistAndEmit(platform, { status: "success", url });
       } catch (err: unknown) {
         const e = err as {
           platform?: Platform;
@@ -63,7 +75,7 @@ async function runUploads(
           message?: string;
           retryable?: boolean;
         };
-        emitStatus(jobId, platform, {
+        await persistAndEmit(platform, {
           status: "error",
           error: {
             platform: e.platform ?? platform,
@@ -155,7 +167,7 @@ router.post(
       createdAt: new Date(),
     };
 
-    createJob(job);
+    await createJob(job);
     res.json({ success: true, data: { jobId } });
 
     // Fire-and-forget: uploads run after the response is sent
